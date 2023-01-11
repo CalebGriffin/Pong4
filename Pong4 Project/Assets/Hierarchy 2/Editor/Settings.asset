@@ -71,7 +71,7 @@ MonoBehaviour:
   applyStaticTargetAndChild: 1
   applyTagTargetAndChild: 0
   applyLayerTargetAndChild: 1
-  separatorStartWith: --->
+  separatorStartWith: //
   separatorDefaultTag: Untagged
   useInstantBackground: 1
   instantBackgroundColors: []
