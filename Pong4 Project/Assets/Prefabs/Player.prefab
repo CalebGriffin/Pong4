@@ -147,6 +147,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f7a2fbdd8951b54db4e1bb35ea7ae0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  wallArr:
+  - {fileID: 7272751155961114203, guid: 696e138c068cd9e47b28869c93dd3b5c, type: 3}
+  - {fileID: 4709934045172159213, guid: 0e7e979e9ea649a44b971aef31672fc8, type: 3}
+  - {fileID: 3337828696877665750, guid: 102e0a18c744822408c57d4edfb343a1, type: 3}
+  - {fileID: 2003029385703022372, guid: 89c8e92a15ac61449bce4a9cc78fa033, type: 3}
+  colorArr:
+  - {r: 0.22352941, g: 1, b: 0.078431375, a: 1}
+  - {r: 1, g: 0.4117647, b: 0.7058824, a: 1}
+  - {r: 0.05882353, g: 0.60784316, b: 1, a: 1}
+  - {r: 1, g: 0.49803922, b: 0, a: 1}
 --- !u!114 &7189471616751127161
 MonoBehaviour:
   m_ObjectHideFlags: 0

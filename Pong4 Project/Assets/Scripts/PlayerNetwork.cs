@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class PlayerNetwork : NetworkBehaviour
 {
@@ -9,6 +11,18 @@ public class PlayerNetwork : NetworkBehaviour
     float upperBound;
 
     float moveSpeed = 4f;
+
+    bool gameRunning = false;
+
+    private GameObject gameCanvas;
+    private Button playButton;
+    private TextMeshProUGUI playersText;
+
+    private GameObject waitingCanvas;
+
+    [SerializeField] private GameObject[] wallArr = new GameObject[4];
+
+    [SerializeField] private Color[] colorArr = new Color[4];
 
     void Awake()
     {
@@ -18,7 +32,38 @@ public class PlayerNetwork : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        transform.parent.localEulerAngles = new Vector3(0f, 0f, OwnerClientId * 90f);
+        int playerIndex = NetworkManager.Singleton.ConnectedClientsIds.Count - 1;
+        transform.parent.localEulerAngles = new Vector3(0f, 0f, (playerIndex % 4) * 90f);
+        gameObject.GetComponent<SpriteRenderer>().color = colorArr[playerIndex % 4];
+
+        if (IsHost || IsServer) OnHostSpawn();
+        else OnClientSpawn();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (IsHost || IsServer) OnHostDespawn();
+    }
+
+    void OnHostSpawn()
+    {
+        // This is run when the first player joins
+        gameCanvas = GRefs.Singleton.gameCanvas;
+        gameCanvas.SetActive(true);
+        playButton = GRefs.Singleton.playGameButton;
+        playButton.onClick.AddListener(PlayGame);
+        playersText = GRefs.Singleton.playersText;
+    }
+
+    void OnClientSpawn()
+    {
+        waitingCanvas = GRefs.Singleton.waitingCanvas;
+        waitingCanvas.SetActive(true);
+    }
+
+    void OnHostDespawn()
+    {
+        // This is run when the last player leaves
     }
 
     void Update()
@@ -30,7 +75,20 @@ public class PlayerNetwork : NetworkBehaviour
 
     void HostUpdate()
     {
+        if (!gameRunning) playersText.text = $"Players: {NetworkManager.Singleton.ConnectedClientsIds.Count}";
+    }
 
+    [ServerRpc(RequireOwnership = false)]
+    void DespawnWallServerRpc(int wallIndex, ServerRpcParams serverRpcParams = default)
+    {
+        wallArr[wallIndex].GetComponent<NetworkObject>().Despawn(false);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void SpawnWallServerRpc(int wallIndex, ServerRpcParams serverRpcParams = default)
+    {
+        GameObject wallObj = Instantiate(wallArr[wallIndex], wallArr[wallIndex].transform.position, Quaternion.identity);
+        wallObj.GetComponent<NetworkObject>().Spawn();
     }
 
     void HandleMovement()
@@ -53,5 +111,14 @@ public class PlayerNetwork : NetworkBehaviour
         if (y == 0f) y = Mathf.Clamp(transform.position.y + moveAmount.y, lowerBound, upperBound);
 
         return new Vector3(x, y, transform.position.z);
+    }
+
+    void PlayGame()
+    {
+        gameRunning = true;
+        for (int i = wallArr.Length - 1; i >= NetworkManager.Singleton.ConnectedClientsIds.Count; i--)
+        {
+            SpawnWallServerRpc(i);
+        }
     }
 }
