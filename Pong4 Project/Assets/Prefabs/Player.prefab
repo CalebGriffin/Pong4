@@ -61,9 +61,10 @@ GameObject:
   - component: {fileID: 2004011199119573481}
   - component: {fileID: 1616437109381643812}
   - component: {fileID: 7189471616751127161}
+  - component: {fileID: 821286911325511859}
   m_Layer: 0
   m_Name: Player Object
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -152,6 +153,7 @@ MonoBehaviour:
   - {fileID: 4709934045172159213, guid: 0e7e979e9ea649a44b971aef31672fc8, type: 3}
   - {fileID: 3337828696877665750, guid: 102e0a18c744822408c57d4edfb343a1, type: 3}
   - {fileID: 2003029385703022372, guid: 89c8e92a15ac61449bce4a9cc78fa033, type: 3}
+  ballPrefab: {fileID: 7532553340524180187, guid: 270354e021e89014798995c61953aa0f, type: 3}
   colorArr:
   - {r: 0.22352941, g: 1, b: 0.078431375, a: 1}
   - {r: 1, g: 0.4117647, b: 0.7058824, a: 1}
@@ -183,3 +185,29 @@ MonoBehaviour:
   ScaleThreshold: 0.01
   InLocalSpace: 0
   Interpolate: 1
+--- !u!61 &821286911325511859
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2004011199119573483}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
