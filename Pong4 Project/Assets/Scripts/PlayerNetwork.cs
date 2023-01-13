@@ -22,7 +22,13 @@ public class PlayerNetwork : NetworkBehaviour
 
     [SerializeField] private GameObject[] wallArr = new GameObject[4];
 
-    [SerializeField] private Color[] colorArr = new Color[4];
+    [SerializeField] private GameObject ballPrefab;
+
+    [SerializeField] private Color[] colorArr = new Color[4] { new Color(0.22f, 1f, 0.08f, 1f), new Color(1f, 0.41f, 0.71f, 1f), new Color(0.06f, 0.61f, 1f, 1f), new Color(1f, 0.5f, 0f, 1f) };
+
+    NetworkVariable<Color> playerColor = new NetworkVariable<Color>();
+
+    NetworkVariable<int> score = new NetworkVariable<int>();
 
     void Awake()
     {
@@ -30,14 +36,39 @@ public class PlayerNetwork : NetworkBehaviour
         upperBound = 5f - (transform.localScale.y / 2);
     }
 
+    void Start()
+    {
+        Initialize();
+    }
+
     public override void OnNetworkSpawn()
     {
-        int playerIndex = NetworkManager.Singleton.ConnectedClientsIds.Count - 1;
+        int playerIndex = (int)OwnerClientId;
         transform.parent.localEulerAngles = new Vector3(0f, 0f, (playerIndex % 4) * 90f);
-        gameObject.GetComponent<SpriteRenderer>().color = colorArr[playerIndex % 4];
+
+        playerColor.OnValueChanged += OnStateChanged;
+        Initialize();
+
+        //if (IsHost || IsServer)
+        //{
+            //ClientRpcParams clientRpcParams = new ClientRpcParams
+            //{
+                //Send = new ClientRpcSendParams
+                //{
+                    //TargetClientIds = new ulong[] { NetworkManager.Singleton.ConnectedClientsIds[playerIndex] }
+                //}
+            //};
+            //SetColourClientRpc(playerIndex, clientRpcParams);
+        //}
 
         if (IsHost || IsServer) OnHostSpawn();
-        else OnClientSpawn();
+    }
+
+    void Initialize()
+    {
+        int playerIndex = (int)OwnerClientId;
+        if (IsHost || IsServer) playerColor.Value = colorArr[playerIndex % 4];
+        GetComponent<SpriteRenderer>().color = playerColor.Value;
     }
 
     public override void OnNetworkDespawn()
@@ -53,6 +84,7 @@ public class PlayerNetwork : NetworkBehaviour
         playButton = GRefs.Singleton.playGameButton;
         playButton.onClick.AddListener(PlayGame);
         playersText = GRefs.Singleton.playersText;
+        EnableWaitingCanvasClientRpc();
     }
 
     void OnClientSpawn()
@@ -78,6 +110,13 @@ public class PlayerNetwork : NetworkBehaviour
         if (!gameRunning) playersText.text = $"Players: {NetworkManager.Singleton.ConnectedClientsIds.Count}";
     }
 
+    public void OnStateChanged(Color oldColor, Color newColor)
+    {
+        Debug.Log($"Color changed from {oldColor} to {newColor}");
+        playerColor.Value = newColor;
+        GetComponent<SpriteRenderer>().color = playerColor.Value;
+    }
+
     [ServerRpc(RequireOwnership = false)]
     void DespawnWallServerRpc(int wallIndex, ServerRpcParams serverRpcParams = default)
     {
@@ -89,6 +128,40 @@ public class PlayerNetwork : NetworkBehaviour
     {
         GameObject wallObj = Instantiate(wallArr[wallIndex], wallArr[wallIndex].transform.position, Quaternion.identity);
         wallObj.GetComponent<NetworkObject>().Spawn();
+    }
+
+    [ServerRpc]
+    public void UpdateScoreServerRpc()
+    {
+        score.Value++;
+    }
+
+    [ClientRpc]
+    void UpdateScoreClientRpc()
+    {
+
+    }
+
+    [ClientRpc]
+    void SetColourClientRpc(int playerIndex, ClientRpcParams clientRpcParams = default)
+    {
+        gameObject.GetComponent<SpriteRenderer>().color = colorArr[playerIndex % 4];
+    }
+
+    [ClientRpc]
+    void EnableWaitingCanvasClientRpc()
+    {
+        if (IsHost || IsServer) return;
+        waitingCanvas = GRefs.Singleton.waitingCanvas;
+        waitingCanvas.SetActive(true);
+        waitingCanvas.SetActive(true);
+    }
+
+    [ClientRpc]
+    void DisableWaitingCanvasClientRpc()
+    {
+        if (IsHost || IsServer) return;
+        waitingCanvas.SetActive(false);
     }
 
     void HandleMovement()
@@ -115,10 +188,17 @@ public class PlayerNetwork : NetworkBehaviour
 
     void PlayGame()
     {
+        if (gameRunning) return;
         gameRunning = true;
         for (int i = wallArr.Length - 1; i >= NetworkManager.Singleton.ConnectedClientsIds.Count; i--)
         {
             SpawnWallServerRpc(i);
         }
+        DisableWaitingCanvasClientRpc();
+        gameCanvas.SetActive(false);
+
+        // Start the game here
+        GameObject ball = Instantiate(ballPrefab, ballPrefab.transform.position, Quaternion.identity);
+        ball.GetComponent<NetworkObject>().Spawn();
     }
 }
