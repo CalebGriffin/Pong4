@@ -10,7 +10,7 @@ public class PlayerNetwork : NetworkBehaviour
     float lowerBound;
     float upperBound;
 
-    float moveSpeed = 4f;
+    float moveSpeed = 4.5f;
 
     bool gameRunning = false;
 
@@ -20,15 +20,19 @@ public class PlayerNetwork : NetworkBehaviour
 
     private GameObject waitingCanvas;
 
+    private GameObject scoreCanvas;
+
     [SerializeField] private GameObject[] wallArr = new GameObject[4];
 
     [SerializeField] private GameObject ballPrefab;
+
+    private GameObject ball;
 
     [SerializeField] private Color[] colorArr = new Color[4] { new Color(0.22f, 1f, 0.08f, 1f), new Color(1f, 0.41f, 0.71f, 1f), new Color(0.06f, 0.61f, 1f, 1f), new Color(1f, 0.5f, 0f, 1f) };
 
     NetworkVariable<Color> playerColor = new NetworkVariable<Color>();
 
-    NetworkVariable<int> score = new NetworkVariable<int>();
+    public NetworkVariable<int> score = new NetworkVariable<int>();
 
     void Awake()
     {
@@ -81,9 +85,12 @@ public class PlayerNetwork : NetworkBehaviour
         // This is run when the first player joins
         gameCanvas = GRefs.Singleton.gameCanvas;
         gameCanvas.SetActive(true);
+
         playButton = GRefs.Singleton.playGameButton;
         playButton.onClick.AddListener(PlayGame);
+
         playersText = GRefs.Singleton.playersText;
+
         EnableWaitingCanvasClientRpc();
     }
 
@@ -130,18 +137,6 @@ public class PlayerNetwork : NetworkBehaviour
         wallObj.GetComponent<NetworkObject>().Spawn();
     }
 
-    [ServerRpc]
-    public void UpdateScoreServerRpc()
-    {
-        score.Value++;
-    }
-
-    [ClientRpc]
-    void UpdateScoreClientRpc()
-    {
-
-    }
-
     [ClientRpc]
     void SetColourClientRpc(int playerIndex, ClientRpcParams clientRpcParams = default)
     {
@@ -152,8 +147,7 @@ public class PlayerNetwork : NetworkBehaviour
     void EnableWaitingCanvasClientRpc()
     {
         if (IsHost || IsServer) return;
-        waitingCanvas = GRefs.Singleton.waitingCanvas;
-        waitingCanvas.SetActive(true);
+        if (waitingCanvas == null) waitingCanvas = GRefs.Singleton.waitingCanvas;
         waitingCanvas.SetActive(true);
     }
 
@@ -162,6 +156,19 @@ public class PlayerNetwork : NetworkBehaviour
     {
         if (IsHost || IsServer) return;
         waitingCanvas.SetActive(false);
+    }
+
+    [ClientRpc]
+    void EnableScoreCanvasClientRpc()
+    {
+        if (scoreCanvas == null) scoreCanvas = GRefs.Singleton.scoreCanvas;
+        scoreCanvas.SetActive(true);
+    }
+
+    [ClientRpc]
+    void DisableScoreCanvasClientRpc()
+    {
+        scoreCanvas.SetActive(false);
     }
 
     void HandleMovement()
@@ -188,17 +195,26 @@ public class PlayerNetwork : NetworkBehaviour
 
     void PlayGame()
     {
-        if (gameRunning) return;
-        gameRunning = true;
+        DisableWaitingCanvasClientRpc();
+        LevelSetup();
+    }
+
+    void LevelSetup()
+    {
+        if (!IsLocalPlayer) return;
+
         for (int i = wallArr.Length - 1; i >= NetworkManager.Singleton.ConnectedClientsIds.Count; i--)
         {
             SpawnWallServerRpc(i);
         }
-        DisableWaitingCanvasClientRpc();
         gameCanvas.SetActive(false);
+        EnableScoreCanvasClientRpc();
 
         // Start the game here
-        GameObject ball = Instantiate(ballPrefab, ballPrefab.transform.position, Quaternion.identity);
-        ball.GetComponent<NetworkObject>().Spawn();
+        if (ball == null)
+        {
+            ball = Instantiate(ballPrefab, ballPrefab.transform.position, Quaternion.identity);
+            ball.GetComponent<NetworkObject>().Spawn();
+        }
     }
 }

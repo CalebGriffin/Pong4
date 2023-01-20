@@ -630,8 +630,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCanvas: {fileID: 2081001610}
   waitingCanvas: {fileID: 1206602701}
+  scoreCanvas: {fileID: 1418435041}
   playGameButton: {fileID: 1019375624}
   playersText: {fileID: 709996374}
+  scoreText: {fileID: 408001314}
+  score: 0
 --- !u!4 &571397824
 Transform:
   m_ObjectHideFlags: 0
@@ -2836,8 +2839,8 @@ MonoBehaviour:
   m_MaxConnectAttempts: 60
   m_DisconnectTimeoutMS: 30000
   ConnectionData:
-    Address: 127.0.0.1
-    Port: 7777
+    Address: 172.20.90.245
+    Port: 1000
     ServerListenAddress: 
   DebugSimulator:
     PacketDelayMS: 0

@@ -10,8 +10,12 @@ public class GRefs : MonoBehaviour
 
     public GameObject gameCanvas;
     public GameObject waitingCanvas;
+    public GameObject scoreCanvas;
     public Button playGameButton;
     public TextMeshProUGUI playersText;
+    public TextMeshProUGUI scoreText;
+
+    public int score = 0;
 
     void Awake()
     {
